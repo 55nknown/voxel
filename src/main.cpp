@@ -127,11 +127,11 @@ int main()
 
             // UI
             ImGui::Text("Translation 1");
-            ImGui::SliderFloat("X1", &translation1.x, 0.f, 800.f);
-            ImGui::SliderFloat("Y1", &translation1.y, 0.f, 800.f);
+            ImGui::SliderFloat("X1", &translation1.x, 0.f, (float)windowWidth);
+            ImGui::SliderFloat("Y1", &translation1.y, 0.f, (float)windowHeight);
             ImGui::Text("Translation 2");
-            ImGui::SliderFloat("X2", &translation2.x, 0.f, 800.f);
-            ImGui::SliderFloat("Y2", &translation2.y, 0.f, 800.f);
+            ImGui::SliderFloat("X2", &translation2.x, 0.f, (float)windowWidth);
+            ImGui::SliderFloat("Y2", &translation2.y, 0.f, (float)windowHeight);
             ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 
             // Render
