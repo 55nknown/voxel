@@ -26,6 +26,7 @@ static void glfw_error_callback(int error, const char* description)
 
 int main()
 {
+    // Initialize GLFW
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return -1;
@@ -34,8 +35,8 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    unsigned int windowWidth = 960;
-    unsigned int windowHeight = 540;
+    int windowWidth = 960;
+    int windowHeight = 540;
 
     GLFWwindow *window = glfwCreateWindow(windowWidth, windowHeight, "Voxel", NULL, NULL);
 
@@ -49,6 +50,7 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
+    // Initialize GLEW
     if (glewInit() != GLEW_OK) {
         std::cout << "Failed to initialize GLEW" << std::endl;
         glfwTerminate();
@@ -58,10 +60,10 @@ int main()
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
     {
         float positions[] = {
-              0.f,   0.f, 0.f, 0.f,
-            100.f,   0.f, 1.f, 0.f,
-            100.f, 100.f, 1.f, 1.f,
-              0.f, 100.f, 0.f, 1.f,
+            -50.f, -50.f, 0.f, 0.f,
+             50.f, -50.f, 1.f, 0.f,
+             50.f,  50.f, 1.f, 1.f,
+            -50.f,  50.f, 0.f, 1.f,
         };
 
         unsigned int indices[] = {
@@ -69,6 +71,7 @@ int main()
             2, 3, 0,
         };
 
+        // Blending
         glCall(glEnable(GL_BLEND));
         glCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
@@ -90,7 +93,6 @@ int main()
 
         Shader shader("res/shaders/basic.glsl");
         shader.Bind();
-        // shader.SetUniform4f("uColor", 0.4f, 0.8f, 0.3f, 1.0f);
         shader.SetUniformMat4f("uModel", mvp);
 
         Texture texture("res/textures/logo.png");
@@ -110,32 +112,50 @@ int main()
         ImGui_ImplOpenGL3_Init("#version 330 core");
         ImGui::StyleColorsDark();
 
-        glm::vec3 translation(200, 200, 0);
+        glm::vec3 translation1(200, 200, 0);
+        glm::vec3 translation2(200, 200, 0);
 
         while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
+
+            // New Frame
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
-
             shader.Bind();
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
-            glm::mat4 mvp = proj * view * model;
-            shader.SetUniformMat4f("uModel", mvp);
 
-            {
-                ImGui::SliderFloat("X", &translation.x, 0.f, 800.f);
-                ImGui::SliderFloat("Y", &translation.y, 0.f, 800.f);
-            }
+            // UI
+            ImGui::Text("Translation 1");
+            ImGui::SliderFloat("X1", &translation1.x, 0.f, 800.f);
+            ImGui::SliderFloat("Y1", &translation1.y, 0.f, 800.f);
+            ImGui::Text("Translation 2");
+            ImGui::SliderFloat("X2", &translation2.x, 0.f, 800.f);
+            ImGui::SliderFloat("Y2", &translation2.y, 0.f, 800.f);
+            ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 
+            // Render
             ImGui::Render();
-            int display_w, display_h;
-            glfwGetFramebufferSize(window, &display_w, &display_h);
-            glViewport(0, 0, display_w, display_h);
-            proj = glm::ortho(0.f, (float)display_w, 0.f, (float)display_h, -1.0f, 1.0f);
+            
+            // Adjust the viewport
+            glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
+            glViewport(0, 0, windowWidth, windowHeight);
+            proj = glm::ortho(0.f, (float)windowWidth, 0.f, (float)windowHeight, -1.0f, 1.0f);
+
+            // Draw
             renderer.Clear();
-            renderer.Draw(va, ib, shader);
+            {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), translation1);
+                glm::mat4 mvp = proj * view * model;
+                shader.SetUniformMat4f("uModel", mvp);
+                renderer.Draw(va, ib, shader);
+            }
+            {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), translation2);
+                glm::mat4 mvp = proj * view * model;
+                shader.SetUniformMat4f("uModel", mvp);
+                renderer.Draw(va, ib, shader);
+            }
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             glfwSwapBuffers(window);
